@@ -873,6 +873,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.id==='netHops'){S.net.hops=+t.value;render()}
  else if(t.id==='tlClan'){S.tl.clan=t.value;render()}
  else if(t.dataset.imgadd&&t.files.length){const box=t.closest('.fld').querySelector('.imgs');const files=[...t.files];t.value='';const st=$('#imgst');(async()=>{let n=0;for(const f of files){if(st)st.textContent=`読み込み中… ${++n}/${files.length}`;try{const im=await makeImage(f);const a=JSON.parse(box.dataset.imgs||'[]');a.push(im);box.dataset.imgs=JSON.stringify(a);box.innerHTML=imgsInner(a)}catch(err){toast(err.message)}}if(st)st.textContent=''})()}
+ else if(t.dataset.addfile&&t.files[0]){const r=new FileReader();r.onload=()=>{const ta=$('#fm textarea[name=j]');if(ta)ta.value=r.result;toast('ファイルを読み込みました。「内容を確かめる」を押してください')};r.readAsText(t.files[0])}
  else if(t.id==='impf'&&t.files[0]){const r=new FileReader();r.onload=()=>{try{const w=normalize(JSON.parse(r.result));askConfirm(`「${esc(w.meta.name)}」の台帳（人物${w.persons.length}名）でいまの台帳を置き換えます。`,'置き換える',()=>{W=w;ver++;Store.save();S.stack=[];render();toast('読み込みました')})}catch(err){toast('読み込めませんでした：'+err.message)}};r.readAsText(t.files[0])}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#pk').hidden)pkClose();else if(!$('#ov').hidden)closeSheet()}});
@@ -2847,7 +2848,7 @@ function applyAdd(o){for(const k of ARR){if(!Array.isArray(o[k]))continue;for(co
  if(o.meta&&typeof o.meta==='object')for(const k of ['name','yearLabel','baseYear'])if(o.meta[k]!=null)W.meta[k]=o.meta[k];
  const ids=(o.persons||[]).map(x=>x.id).filter(Boolean);commit();return ids}
 function openAddSheet(pre){
- openSheet('追記の貼り付け',`<p class="hint" style="margin:0 0 8px">Claude との会話で作った「追記」を貼り付けると、いまの台帳に人物や関係を書き足します。同じ ID の記録は書き換えます。</p><label class="fld"><span>追記の文字列</span><textarea name="j" style="min-height:200px;font-size:12px" placeholder='{"kokushi":"add", ...}'>${esc(pre||'')}</textarea></label><div class="btns" style="justify-content:flex-start;margin-bottom:8px"><button type="button" class="mini" data-act="addclip">クリップボードから貼り付け</button></div>`,d=>{
+ openSheet('追記の貼り付け',`<p class="hint" style="margin:0 0 8px">Claude との会話で作った「追記」を貼り付けると、いまの台帳に人物や関係を書き足します。同じ ID の記録は書き換えます。</p><label class="fld"><span>追記の文字列</span><textarea name="j" style="min-height:200px;font-size:12px" placeholder='{"kokushi":"add", ...}'>${esc(pre||'')}</textarea></label><div class="btns" style="justify-content:flex-start;margin-bottom:8px"><button type="button" class="mini" data-act="addclip">クリップボードから貼り付け</button><label class="mini" style="display:inline-block;cursor:pointer">ファイルから読む<input type="file" accept=".json,.txt,application/json,text/plain" data-addfile="1" hidden></label></div>`,d=>{
   let o;try{o=parseAddText(d.j)}catch(e){return '読み取れませんでした：'+e.message}
   const {plan,n}=planAdd(o);if(!n&&!o.meta)return '追加する記録が入っていません';
   setTimeout(()=>openSheet('追記の確認',`<p>次の内容を台帳に書き足します。</p><ul style="margin:0 0 8px 1.2em;padding:0">${plan.map(x=>`<li>${esc(x)}</li>`).join('')}${o.meta?'<li>国の設定</li>':''}</ul><p class="hint">書き足す前に「JSON を書き出す」で控えを取っておくと安心です。</p>`,()=>{const ids=applyAdd(o);toast('書き足しました');if(ids.length===1){S.tab='persons';S.stack=[{type:'person',id:ids[0]}];render()}},null,'書き足す'),0);
